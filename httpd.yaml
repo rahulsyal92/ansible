@@ -1,0 +1,17 @@
+---
+- hosts: demo
+  gather_facts: no
+  remote_user: ec2-user
+  become: yes
+  tasks:
+  - name: install httpd
+    yum:
+     name: httpd
+     state: present
+
+
+  - name: install httpd
+    systemd:
+     name: httpd
+     state: started
+

@@ -1,0 +1,44 @@
+---
+- hosts: demo
+  gather_facts: no
+  remote_user: ec2-user
+  become: yes
+  tasks:
+  - name: install java
+    yum:
+     name: java-1.8.0-openjdk-devel
+     state: present
+
+
+  - name: download tomcat
+    get_url:
+     url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.54/bin/apache-tomcat-9.0.54.tar.gz
+     dest: /opt
+  - name: extract tomcat  
+    unarchive:
+         src: /opt/apache-tomcat-9.0.54.tar.gz
+         dest: /opt/
+         remote_src: yes
+  - name: change ownership  
+    file:
+       path: /opt/apache-tomcat-9.0.54
+       owner: ec2-user
+       group: ec2-user
+       recurse: yes
+       state: directory
+  - name: edit tomcat-users.xml
+    blockinfile:
+          dest: /opt/apache-tomcat-9.0.54/conf/tomcat-users.xml
+          insertbefore: </tomcat-users>
+          block: |
+           <role rolename = "admin-gui" />
+           <role rolename = "manager-gui" />
+           <user username = "tomcat" password = "tomcat" roles = "admin-gui, manager-gui" />
+  - name: Comment out pipeline archive in fstab
+    lineinfile:
+        dest: /opt/apache-tomcat-9.0.54/webapps/manager/META-INF/context.xml
+        regexp: '^ <Valve className'
+        line: '<!-- <Valve className'
+        state: present
+  - name: start tomcat 
+    shell: nohup /opt/apache-tomcat-9.0.54/bin/startup.sh  &

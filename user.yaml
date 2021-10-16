@@ -1,0 +1,22 @@
+--- 
+- hosts: demo
+  gather_facts: no
+  become: yes
+  remote_user: ec2-user
+  tasks:
+  - name: Create Devops User
+    user:
+      name: syal
+      create_home: true
+      shell: /bin/bash
+      comment: "Ansible Management Account"
+      expires: -1
+      password: "{{ 'syal@2020' | password_hash('sha512','A512') }}"
+  - name: Setup Sudo Access for Devops User
+    copy:
+      dest: /etc/sudoers.d/ansible
+      content: 'syal ALL=(ALL) NOPASSWD: ALL' 
+  - name: restart ssh
+    service:
+      name: sshd
+      state: restarted
